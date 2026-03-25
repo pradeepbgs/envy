@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 
@@ -21,8 +22,8 @@ type R2 struct {
 func New(cfg *config.Config) *R2 {
 	c := s3.New(s3.Options{
 		BaseEndpoint: aws.String(cfg.R2Endpoint),
-		Region: "auto",
-		Credentials: credentials.NewStaticCredentialsProvider(cfg.AccessKey,cfg.SecretKey,""),
+		Region:       "auto",
+		Credentials:  credentials.NewStaticCredentialsProvider(cfg.AccessKey, cfg.SecretKey, ""),
 	})
 
 	return &R2{
@@ -71,10 +72,24 @@ func (r *R2) List(ctx context.Context) ([]string, error) {
 	return keys, nil
 }
 
-func (r *R2) Delete(ctx context.Context, key string) error {
-	_,err := r.client.DeleteObject(ctx, &s3.DeleteObjectInput{
-		Bucket: &r.bucket,
-		Key: aws.String(key),
+func (r *R2) Delete(ctx context.Context, r2_key_name string) error {
+	_, err := r.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(r.bucket),
+		Key:    aws.String(r2_key_name),
 	})
-	return err
+	if err != nil {
+		return err
+	}
+
+	// S3/R2 DeleteObject always returns 204 even for non-existent objects.
+	// Verify the object is actually gone.
+	_, err = r.client.HeadObject(ctx, &s3.HeadObjectInput{
+		Bucket: aws.String(r.bucket),
+		Key:    aws.String(r2_key_name),
+	})
+	if err == nil {
+		return fmt.Errorf("delete request succeeded but object '%s' still exists in bucket '%s'", r2_key_name, r.bucket)
+	}
+	// HeadObject returning an error (404) means the object is gone — that's success.
+	return nil
 }

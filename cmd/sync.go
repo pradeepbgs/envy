@@ -17,7 +17,7 @@ var syncCmd = &cobra.Command{
 	Use:   "sync <name> <targetdir>",
 	Short: "Download and decrypt a .env file from R2 into a directory",
 	Args:  cobra.ExactArgs(2),
-	RunE: runSync,
+	RunE:  runSync,
 }
 
 func init() {
@@ -54,15 +54,12 @@ func runSync(cmd *cobra.Command, args []string) error {
 
 	//downalod the encrypted file by given name
 	encrypted, err := r2.Download(cmd.Context(), name+".enc")
-	// for testing we will save it
-	fmt.Println("encrypted ",encrypted)
 	if err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
 	// decyrpt the file
 	plainText, err := crypto.Decrypt(encrypted, key)
-	fmt.Println("plainText ",plainText)
 	if err != nil {
 		return fmt.Errorf("decrypt failed: %w", err)
 	}

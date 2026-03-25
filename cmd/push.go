@@ -27,19 +27,19 @@ func runPush(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("config not found — run 'envy init' first: %w", err)
 	}
 	// create a key first?
-	encrypted_key, err := config.Decodekey(cfg.Encryptionkey)
+	decrypted_key, err := config.Decodekey(cfg.Encryptionkey)
 	if err != nil {
 		return fmt.Errorf("failed to read %s: %w", env_file, err)
 	}
 
 	// read the file
-	data , err := os.ReadFile(env_file)
+	data, err := os.ReadFile(env_file)
 	if err != nil {
 		return fmt.Errorf("failed to read %s: %w", env_file, err)
 	}
 
 	// encrypt the file
-	encrypted, err := crypto.Encrypt(data,encrypted_key)
+	encrypted, err := crypto.Encrypt(data, decrypted_key)
 	if err != nil {
 		return fmt.Errorf("failed to encrypt %s: %w", env_file, err)
 	}
@@ -49,7 +49,7 @@ func runPush(cmd *cobra.Command, args []string) error {
 	if err := r2.Upload(cmd.Context(), name+".enc", encrypted); err != nil {
 		return fmt.Errorf("failed to upload to R2: %w", err)
 	}
-	
+
 	fmt.Printf("Successfully uploaded %s to R2 as %s\n", env_file, name+".enc")
 	return nil
 }
