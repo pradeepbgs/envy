@@ -14,7 +14,7 @@ type Config struct {
 	AccessKey     string `json:"access_key"`
 	SecretKey     string `json:"secret_key"`
 	Bucket        string `json:"bucket"`
-	EncryptionKey string `json:"encryption_key"` // base64-encoded 32 bytes
+	Encryptionkey string `json:"encryption_key"` // hashed
 }
 
 func configPath() (string, error) {
@@ -34,6 +34,7 @@ func Load() (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var cfg Config
 	if err := json.Unmarshal(data, &cfg); err != nil {
 		return nil, err
@@ -64,7 +65,7 @@ func GenerateKey() (string, error) {
 	return base64.StdEncoding.EncodeToString(key), nil
 }
 
-func DecodeKey(encoded string) ([]byte, error) {
+func Decodekey(encoded string) ([]byte, error) {
 	key, err := base64.StdEncoding.DecodeString(encoded)
 	if err != nil {
 		return nil, err

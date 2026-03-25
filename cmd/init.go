@@ -10,13 +10,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+
 var initCmd = &cobra.Command{
-	Use:   "init",
+	Use: "init",
 	Short: "Initialize envy with your R2 credentials",
-	RunE:  runInit,
+	RunE: runInit,
 }
 
-func runInit(cmd *cobra.Command, args []string) error {
+// Here we have to Init  and ask users
+
+// for their R2 credentials and save them to a config file
+
+func runInit (cmd *cobra.Command, args []string) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	fmt.Print("R2 Endpoint (https://<account_id>.r2.cloudflarestorage.com): ")
@@ -34,27 +39,29 @@ func runInit(cmd *cobra.Command, args []string) error {
 	fmt.Print("Bucket name [envy-store]: ")
 	bucket, _ := reader.ReadString('\n')
 	bucket = strings.TrimSpace(bucket)
+
 	if bucket == "" {
 		bucket = "envy-store"
 	}
 
-	encKey, err := config.GenerateKey()
+	// Now create a Secret encrypted key
+	encSecretKey , err := config.GenerateKey()
 	if err != nil {
 		return fmt.Errorf("failed to generate encryption key: %w", err)
 	}
 
+	// Now we have the users input, lets save it to the config file ~/.envy/config.json
 	cfg := &config.Config{
-		R2Endpoint:    endpoint,
-		AccessKey:     accessKey,
-		SecretKey:     secretKey,
-		Bucket:        bucket,
-		EncryptionKey: encKey,
+		R2Endpoint: endpoint,
+		AccessKey: accessKey,
+		SecretKey: secretKey,
+		Bucket: bucket,
+		Encryptionkey: encSecretKey,
 	}
 
-	if err := config.Save(cfg); err != nil {
+	if err := config.Save(cfg); err != nil{
 		return fmt.Errorf("failed to save config: %w", err)
 	}
-
 	fmt.Println("Config saved to ~/.envy/config.json")
 	fmt.Println("Encryption key generated and stored. Keep ~/.envy/config.json safe — losing it means losing access to your envs.")
 	return nil

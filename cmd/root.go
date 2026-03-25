@@ -7,20 +7,20 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "envy",
+	Use: "envy",
 	Short: "Secure environment variable manager backed by Cloudflare R2",
 }
 
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
+	if err := rootCmd.Execute(); err != nil{
 		os.Exit(1)
 	}
 }
 
-func init() {
+func init (){
 	rootCmd.AddCommand(initCmd)
 	rootCmd.AddCommand(pushCmd)
 	rootCmd.AddCommand(syncCmd)
-	rootCmd.AddCommand(listCmd)
-	rootCmd.AddCommand(deleteCmd)
+	// rootCmd.AddCommand(listCmd)
+	// rootCmd.AddCommand(deleteCmd)
 }

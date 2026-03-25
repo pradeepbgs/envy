@@ -11,7 +11,7 @@ import (
 )
 
 var pushCmd = &cobra.Command{
-	Use:   "push <name> <envfile>",
+	Use:   "push <name> <envfile path>",
 	Short: "Encrypt and upload a .env file to R2",
 	Args:  cobra.ExactArgs(2),
 	RunE:  runPush,
@@ -19,33 +19,37 @@ var pushCmd = &cobra.Command{
 
 func runPush(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	envFile := args[1]
+	env_file := args[1]
 
+	// load the config
 	cfg, err := config.Load()
 	if err != nil {
 		return fmt.Errorf("config not found — run 'envy init' first: %w", err)
 	}
-
-	data, err := os.ReadFile(envFile)
+	// create a key first?
+	encrypted_key, err := config.Decodekey(cfg.Encryptionkey)
 	if err != nil {
-		return fmt.Errorf("failed to read %s: %w", envFile, err)
+		return fmt.Errorf("failed to read %s: %w", env_file, err)
 	}
 
-	key, err := config.DecodeKey(cfg.EncryptionKey)
+	// read the file
+	data , err := os.ReadFile(env_file)
 	if err != nil {
-		return fmt.Errorf("invalid encryption key in config: %w", err)
+		return fmt.Errorf("failed to read %s: %w", env_file, err)
 	}
 
-	encrypted, err := crypto.Encrypt(data, key)
+	// encrypt the file
+	encrypted, err := crypto.Encrypt(data,encrypted_key)
 	if err != nil {
-		return fmt.Errorf("encryption failed: %w", err)
+		return fmt.Errorf("failed to encrypt %s: %w", env_file, err)
 	}
 
+	// upload to r2
 	r2 := storage.New(cfg)
 	if err := r2.Upload(cmd.Context(), name+".enc", encrypted); err != nil {
-		return fmt.Errorf("upload failed: %w", err)
+		return fmt.Errorf("failed to upload to R2: %w", err)
 	}
-
-	fmt.Printf("Pushed '%s' to R2\n", name)
+	
+	fmt.Printf("Successfully uploaded %s to R2 as %s\n", env_file, name+".enc")
 	return nil
 }
