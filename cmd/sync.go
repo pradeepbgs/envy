@@ -28,7 +28,10 @@ func init() {
 
 func runSync(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	targetdir := args[1]
+	targetdir, err := filepath.Abs(args[1])
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
 
 	cfg, err := config.Load()
 	if err != nil {

@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pradeepbgs/envy/internal/config"
 	"github.com/pradeepbgs/envy/internal/crypto"
@@ -19,7 +20,10 @@ var pushCmd = &cobra.Command{
 
 func runPush(cmd *cobra.Command, args []string) error {
 	name := args[0]
-	env_file := args[1]
+	env_file, err := filepath.Abs(args[1])
+	if err != nil {
+		return fmt.Errorf("invalid path: %w", err)
+	}
 
 	// load the config
 	cfg, err := config.Load()
